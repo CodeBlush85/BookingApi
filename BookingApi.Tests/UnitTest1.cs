@@ -15,7 +15,7 @@ public class BookingApiTests
 
         var response = await client.GetAsync("/bookings");
 
-        response.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var bookings = await response.Content.ReadFromJsonAsync<List<Booking>>();
 
         Assert.NotNull(bookings);
@@ -39,7 +39,7 @@ public class BookingApiTests
 
         var getResponse = await client.GetAsync($"/bookings/{createdBooking.Id}");
 
-        getResponse.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
         var retrievedBooking = await getResponse.Content.ReadFromJsonAsync<Booking>();
 
         Assert.Equal(createdBooking, retrievedBooking);
@@ -60,5 +60,39 @@ public class BookingApiTests
 
         Assert.NotNull(problem);
         Assert.Contains(nameof(CreateBookingRequest.CheckOutDate), problem.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task PostBooking_WithCheckOutBeforeCheckIn_ReturnsValidationProblem()
+    {
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
+
+        var createRequest = new CreateBookingRequest("Grace Hopper", 202, new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 9));
+
+        var response = await client.PostAsJsonAsync("/bookings", createRequest);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Contains(nameof(CreateBookingRequest.CheckOutDate), problem.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task PostBooking_WithBlankGuestName_ReturnsValidationProblem()
+    {
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
+
+        var createRequest = new CreateBookingRequest("   ", 202, new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 11));
+
+        var response = await client.PostAsJsonAsync("/bookings", createRequest);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+
+        Assert.NotNull(problem);
+        Assert.Contains(nameof(CreateBookingRequest.GuestName), problem.Errors.Keys);
     }
 }

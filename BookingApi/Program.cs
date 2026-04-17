@@ -46,7 +46,7 @@ public record Booking(int Id, string GuestName, int RoomNumber, DateOnly CheckIn
 
 public sealed class BookingStore
 {
-    private int _nextId;
+    private int _nextId = 0;
     private readonly ConcurrentDictionary<int, Booking> _bookings = new();
 
     public IReadOnlyCollection<Booking> GetAll() => _bookings.Values.OrderBy(b => b.Id).ToArray();
