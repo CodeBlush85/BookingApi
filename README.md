@@ -1,2 +1,0 @@
-# BookingApi
-Booking Api
