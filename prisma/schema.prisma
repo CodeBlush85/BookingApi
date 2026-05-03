@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "sqlite"
+  relationMode = "prisma"
+  url          = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  bookings  Booking[]
+  reviews   Review[]
+}
+
+model Host {
+  id       String     @id @default(uuid())
+  name     String
+  listings Property[]
+}
+
+model Property {
+  id            String   @id @default(uuid())
+  title         String
+  location      String
+  pricePerNight Float
+
+  hostId        String
+  host          Host @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  bookings      Booking[]
+  reviews       Review[]
+}
+
+model Booking {
+  id         String   @id @default(uuid())
+  userId     String
+  propertyId String
+  totalPrice Float
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  rating     Int
+  comment    String
+
+  userId     String
+  propertyId String
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
